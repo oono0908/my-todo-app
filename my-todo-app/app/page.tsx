@@ -1,58 +1,53 @@
-import { DeployButton } from "@/components/deploy-button";
-import { EnvVarWarning } from "@/components/env-var-warning";
-import { AuthButton } from "@/components/auth-button";
-import { Hero } from "@/components/hero";
-import { ThemeSwitcher } from "@/components/theme-switcher";
-import { ConnectSupabaseSteps } from "@/components/tutorial/connect-supabase-steps";
-import { SignUpUserSteps } from "@/components/tutorial/sign-up-user-steps";
-import { hasEnvVars } from "@/lib/utils";
-import Link from "next/link";
-import { Suspense } from "react";
+"use client";
+
+import { SupabaseTodoList } from "@/components/supabase-todo-list";
+import { SupabaseAuthProvider, useSupabaseAuth } from "@/components/supabase-auth-provider";
+import { SupabaseLoginScreen } from "@/components/supabase-login-screen";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
+
+function MainContent() {
+  const { user, logout, isLoading } = useSupabaseAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-muted-foreground">読み込み中...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <SupabaseLoginScreen />;
+  }
+
+  return (
+    <main className="min-h-screen flex flex-col items-center p-8 bg-gradient-to-br from-background via-background to-secondary/20">
+      <div className="w-full max-w-7xl space-y-8">
+        <div className="flex items-center justify-between">
+          <div className="text-center flex-1 space-y-2">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+              カンバンボード
+            </h1>
+            <p className="text-muted-foreground">
+              ようこそ、{user.name}さん
+            </p>
+          </div>
+          <Button onClick={logout} variant="outline" className="flex-shrink-0">
+            <LogOut className="mr-2 h-4 w-4" />
+            ログアウト
+          </Button>
+        </div>
+        <SupabaseTodoList userId={user.id} userName={user.name} />
+      </div>
+    </main>
+  );
+}
 
 export default function Home() {
   return (
-    <main className="min-h-screen flex flex-col items-center">
-      <div className="flex-1 w-full flex flex-col gap-20 items-center">
-        <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
-          <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm">
-            <div className="flex gap-5 items-center font-semibold">
-              <Link href={"/"}>Next.js Supabase Starter</Link>
-              <div className="flex items-center gap-2">
-                <DeployButton />
-              </div>
-            </div>
-            {!hasEnvVars ? (
-              <EnvVarWarning />
-            ) : (
-              <Suspense>
-                <AuthButton />
-              </Suspense>
-            )}
-          </div>
-        </nav>
-        <div className="flex-1 flex flex-col gap-20 max-w-5xl p-5">
-          <Hero />
-          <main className="flex-1 flex flex-col gap-6 px-4">
-            <h2 className="font-medium text-xl mb-4">Next steps</h2>
-            {hasEnvVars ? <SignUpUserSteps /> : <ConnectSupabaseSteps />}
-          </main>
-        </div>
-
-        <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">
-          <p>
-            Powered by{" "}
-            <a
-              href="https://supabase.com/?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
-              target="_blank"
-              className="font-bold hover:underline"
-              rel="noreferrer"
-            >
-              Supabase
-            </a>
-          </p>
-          <ThemeSwitcher />
-        </footer>
-      </div>
-    </main>
+    <SupabaseAuthProvider>
+      <MainContent />
+    </SupabaseAuthProvider>
   );
 }
